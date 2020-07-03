@@ -15,12 +15,13 @@ IMG_EXTENSIONS = [
     '.jpg', '.JPG', '.jpeg', '.JPEG',
     '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP',
 ]
-INSTICS = {"2011_09_26": [721.5377, 596.5593, 149.854],
+""" INSTICS = {"2011_09_26": [721.5377, 596.5593, 149.854],
            "2011_09_28": [707.0493, 604.0814, 162.5066],
            "2011_09_29": [718.3351, 600.3891, 159.5122],
            "2011_09_30": [707.0912, 601.8873, 165.1104],
            "2011_10_03": [718.856, 607.1928, 161.2157]
-}
+} """
+INSTICS = [[721.5377, 596.5593, 149.854], [721.5377, 609.5593, 149.854], [721.5377, 596.5593, 149.854]]
 # INSTICS = {"NYU": [582.6245, 313.0448, 238.4439]}
 
 def is_image_file(filename):
@@ -40,27 +41,38 @@ def sparse_loader(lidar2_path):
     img2 = img2 * 1.0 / 256.0
     mask2 = np.where(img2 > 0.0, 1.0, 0.0)
     lidar2 = np.reshape(img2, [img2.shape[0], img2.shape[1], 1]).astype(np.float32)
+    #lidar2 = np.reshape(img2, [img2.shape[0], img2.shape[1], 1]).astype(np.float)
+    #mask2 = np.where(lidar2 > 0.0, 1.0, 0.0)
     return lidar2,mask2
 
 
 class myImageFloder(data.Dataset):
-    def __init__(self, left,sparse,depth,training,
+    def __init__(self, left,sparse,depth,intrinsics,training,
                  loader=default_loader, inloader = input_loader,sloader = sparse_loader):
         self.left = left
         self.sparse = sparse
         self.input = depth
+        self.intrinsics = intrinsics
         self.loader = loader
         self.inloader = inloader
         self.sloader = sloader
         self.training = training
     def __getitem__(self, index):
         left = self.left[index]
+        intr = self.intrinsics[index]
         input = self.input[index]
         sparse = self.sparse[index]
         left_img = self.loader(left)
+        camera_intr = []
+        with open(intr) as f:
+            val_strs = f.readline().strip(" \n").split(' ')
+            for val_str in val_strs:
+                camera_intr.append(float(val_str))
+        params_t = [camera_intr[0], camera_intr[2], camera_intr[5]]
 
-        index_str = self.left[index].split('/')[-4][0:10]
-        params_t = INSTICS[index_str]
+        """ index_str = self.left[index].split('/')[-4][0:10]
+        params_t = INSTICS[index_str] """
+        # params_t = INSTICS[index] # added
         params = np.ones((256,512,3),dtype=np.float32)
         params[:, :, 0] = params[:,:,0] * params_t[0]
         params[:, :, 1] = params[:, :, 1] * params_t[1]
@@ -74,6 +86,7 @@ class myImageFloder(data.Dataset):
         x1 = random.randint(0, w - tw)
         y1 = random.randint(0, h - th)
         mask = np.reshape(mask, [sparse.shape[0], sparse.shape[1], 1]).astype(np.float32)
+        #mask = np.reshape(mask, sparse.shape()).astype(np.float32) 
         params = np.reshape(params, [256, 512, 3]).astype(np.float32)
 
         left_img = left_img[y1:y1 + th, x1:x1 + tw, :]

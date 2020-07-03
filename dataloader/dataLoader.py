@@ -15,21 +15,27 @@ def dataloader(filepath):
     images = []
     lidars = []
     depths = []
+    intrs = []
 
     temp = filepath
-    filepathl = temp + 'data_depth_velodyne/train'
-    filepathd = temp + 'data_depth_annotated/train'
-    filepathgt = temp + 'gt/out/train'
+    # filepathl = temp + 'data_depth_velodyne/train'
+    # filepathd = temp + 'data_depth_annotated/train'
+    # filepathgt = temp + 'gt/out/train'
 
-    seqs = [seq for seq in os.listdir(filepathl) if seq.find('sync') > -1]
-    left_fold = '/image_02/data'
-    right_fold = '/image_03/data'
-    lidar_foldl = '/proj_depth/velodyne_raw/image_02'
-    lidar_foldr = '/proj_depth/velodyne_raw/image_03'
-    depth_foldl = '/proj_depth/groundtruth/image_02'
-    depth_foldr = '/proj_depth/groundtruth/image_03'
+    # seqs = [seq for seq in os.listdir(filepathl) if seq.find('sync') > -1]
+    # left_fold = '/image_02/data'
+    # right_fold = '/image_03/data'
+    # lidar_foldl = '/proj_depth/velodyne_raw/image_02'
+    # lidar_foldr = '/proj_depth/velodyne_raw/image_03'
+    # depth_foldl = '/proj_depth/groundtruth/image_02'
+    # depth_foldr = '/proj_depth/groundtruth/image_03'
 
-    for seq in seqs:
+    img_fold = os.path.join(temp, 'image')
+    lidar_fold = os.path.join(temp, 'velodyne_raw')
+    depth_fold = os.path.join(temp, 'groundtruth_depth')
+    intrs_fold = os.path.join(temp, 'intrinsics')
+
+    """ for seq in seqs:
         temp = os.path.join(filepathgt, seq)
 
         imgsl = os.path.join(filepathl, seq) + left_fold
@@ -57,13 +63,19 @@ def dataloader(filepath):
         depsr = os.path.join(filepathd, seq) + depth_foldr
         depthr = [os.path.join(depsr, dep) for dep in os.listdir(temp)]
         depthr.sort()
-        depths = np.append(depths, depthr)
+        depths = np.append(depths, depthr) """
+
+    images = [os.path.join(img_fold, img) for img in os.listdir(img_fold)]
+    lidars = [os.path.join(lidar_fold, img) for img in os.listdir(lidar_fold)]
+    depths = [os.path.join(depth_fold, img) for img in os.listdir(depth_fold)]
+    cam_intrs = [os.path.join(intrs_fold, vals) for vals in os.listdir(intrs_fold)]
 
     left_train = images
     lidar2_train = lidars
     depth_train = depths
+    intr_train = cam_intrs
 
-    return left_train,lidar2_train,depth_train
+    return left_train,lidar2_train,depth_train, intr_train
 
 
 if __name__ == '__main__':

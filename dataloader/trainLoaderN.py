@@ -44,7 +44,7 @@ def sparse_loader(path):
     mask = np.where(img > 0.0, 1.0, 0.0)
     mask = np.reshape(mask, [img.shape[0], img.shape[1], 1])
     mask = mask.astype(np.float32)
-    img = np.reshape(img, [img.shape[0], img.shape[1], 1])
+    img = np.reshape(img, [img.shape[0], img.shape[1], 1]).astype(np.float32)
     return img,mask
 
 __imagenet_stats = {'mean': [0.485, 0.456, 0.406],
@@ -93,6 +93,9 @@ class myImageFloder(data.Dataset):
         # processed = scale_crop2()
         left_img = processed(left_img)
         sparse_n = processed(sparse_n)
+        mask = processed(mask)
+        print(sparse_n.shape)
+        print(mask.shape)
         return left_img,sparse_n,mask,mask1,data_in1
     def __len__(self):
         return len(self.left)
