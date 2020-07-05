@@ -27,6 +27,8 @@ parser.add_argument('--datapath', default='',
                     help='datapath')
 parser.add_argument('--epochs', type=int, default=40,
                     help='number of epochs to train')
+parser.add_argument('--batch_size', type=int, default=12,
+		    help='number of batch size to train')
 parser.add_argument('--loadmodel', default='',
                     help='load model')
 parser.add_argument('--savemodel', default='my',
@@ -55,18 +57,18 @@ print(len(all_left_img))
 
 TrainImgLoader = torch.utils.data.DataLoader(
         DA.myImageFloder(all_left_img,all_normal,all_gts ,True, args.model),
-        batch_size = 12, shuffle=True, num_workers=8, drop_last=True)
+        batch_size = args.batch_size, shuffle=True, num_workers=8, drop_last=True)
 
-model = s2dN()
+model = s2dN(args.batch_size)
 
 if args.cuda:
     model = nn.DataParallel(model)
     model.cuda()
 
 para_optim = []
-if args.loadmodel is not None:
-    state_dict = torch.load(args.loadmodel)["state_dict"]
-    model.load_state_dict(state_dict)
+#if args.loadmodel is not None:
+    #state_dict = torch.load(args.loadmodel)["state_dict"]
+    #model.load_state_dict(state_dict)
 print('Number of model parameters: {}'.format(sum([p.data.nelement() for p in model.parameters()])))
 optimizer = optim.Adam(model.parameters(), lr=0.001, betas=(0.9, 0.999))
 
@@ -100,7 +102,8 @@ def train(inputl,sparse,mask,mask1,gt1):
 
         optimizer.zero_grad()
 
-        pred = model(inputl,sparse,mask)
+        #pred = model(inputl,sparse,mask)
+        outC, outN, maskC3, maskN3, pred = model(inputl,sparse,mask)
 
         loss = nomal_loss(pred, gt1,mask1)
 

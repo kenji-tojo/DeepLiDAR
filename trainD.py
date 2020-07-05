@@ -33,11 +33,11 @@ torch.manual_seed(args.seed)
 if args.cuda:
     torch.cuda.manual_seed(args.seed)
 
-all_left_img,all_sparse,all_depth = lsn.dataloader(datapath)
+all_left_img,all_sparse,all_depth, cam_intr = lsn.dataloader(datapath)
 
 TrainImgLoader = torch.utils.data.DataLoader(
-        DA.myImageFloder(all_left_img,all_sparse,all_depth, True),
-        batch_size=args.batch_size , shuffle=True, num_workers=8, drop_last=True)
+        DA.myImageFloder(all_left_img,all_sparse,all_depth, cam_intr, True),
+        batch_size=args.batch_size , shuffle=True, num_workers=2, drop_last=True)
 
 model = s2dN(args.batch_size / args.gpu_nums)
 
@@ -162,7 +162,7 @@ def train(inputl,gt1,sparse,mask,params):
             mask = mask.cuda()
         optimizer.zero_grad()
 
-        outC, outN, normals2 = model(inputl, sparse, mask)
+        outC, outN,maskC3, maskN3, normals2 = model(inputl, sparse, mask)
         tempMask = torch.zeros_like(outC)
         predC = outC[:, 0, :, :]
         predN = outN[:, 0, :, :]
